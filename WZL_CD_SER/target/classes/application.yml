@@ -7,8 +7,8 @@ spring:
     username: root
     password: 20040724qwe
   mail:
-    host: smtp.qq.com
-    port: 465
+    host: ****
+    port: ***
     username: *******
     password: *****
     properties:

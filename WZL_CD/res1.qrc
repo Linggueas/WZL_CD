@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/new/prefix1">
+        <file>config.json</file>
+        <file>create.png</file>
+        <file>refresh.png</file>
+        <file>remove.png</file>
+        <file>reset.png</file>
+        <file>CD.png</file>
+        <file>dir.png</file>
+        <file>file.png</file>
+        <file>download.png</file>
+        <file>wait.png</file>
+    </qresource>
+</RCC>

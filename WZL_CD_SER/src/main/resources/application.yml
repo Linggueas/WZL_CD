@@ -5,12 +5,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/wzl_cd_sql?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: 20040724qwe
+    password: 
   mail:
     host: smtp.qq.com
     port: 465
-    username: 3537980074@qq.com
-    password: hviqiupvpaeecjgd
+    username: 
+    password:
     properties:
       mail:
         smtp:

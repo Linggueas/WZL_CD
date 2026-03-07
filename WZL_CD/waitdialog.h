@@ -14,9 +14,12 @@ class WaitDialog : public QDialog
 public:
     explicit WaitDialog(QWidget *parent = nullptr);
     ~WaitDialog();
-
+    void config();
 private:
     Ui::WaitDialog *ui;
+private slots:
+    void slot_down_wait_bar(int per);
+
 };
 
 #endif // WAITDIALOG_H

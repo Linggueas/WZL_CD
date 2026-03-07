@@ -14,42 +14,19 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(log_dlg);
     connect(log_dlg,&LoginDialog::sign_switch_register,this,&MainWindow::slot_switch_register);
     connect(log_dlg,&LoginDialog::sign_switch_main,this,&MainWindow::slot_switch_main);
-    m_tcpThread = new QThread();
-    connect(m_tcpThread, &QThread::started,[]() {
-        qDebug() << "TcpManger线程已启动，线程ID:" << QThread::currentThreadId();
-    });
-    // 创建TCP管理线程
-
-    // 获取TcpManger单例
-
-    // 将TcpManger移动到线程
-    //tcpManager->moveToThread(m_tcpThread);
-
-    /*connect(m_tcpThread, &QThread::started, tcpManager, []() {
-        qDebug() << "TcpManger线程已启动，线程ID:" << QThread::currentThreadId();
-    });*/
-
-    // 启动线程
-    //m_tcpThread->start();
 
 }
 
 
 MainWindow::~MainWindow()
 {
-    // 停止线程
-    if (m_tcpThread && m_tcpThread->isRunning()) {
-        m_tcpThread->quit();
-        m_tcpThread->wait();
-        delete m_tcpThread;
-    }
-    delete ui;
+
 }
 
 void MainWindow::on_pushButton_clicked()
 {
     QMessageBox::information(this,"提醒","开始连接");
-    //TcpManger*tcp = new TcpManger(this,my_host,my_port);
+
 
 }
 void MainWindow::slot_switch_register()

@@ -17,7 +17,8 @@ enum ReqId
     ID_REFRESH = 1007, //循环
     ID_CREATE_FILE = 1008 ,//
     ID_DOWN_FILE = 1009 ,//下载文件
-    ID_NEW_NAME = 1010 //重命名
+    ID_NEW_NAME = 1010 ,//重命名
+    ID_UPLOAD = 1011    //返回
 };
 enum Modules {
     REGISTERMOD = 0,//注册

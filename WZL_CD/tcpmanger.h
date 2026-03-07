@@ -6,7 +6,7 @@
 #include<QTcpSocket>
 #include<QString>
 #include<global.h>
-#include <QThreadPool>
+#include <QThread>
 typedef std::function<void(const QString&)> Function;
 class TcpManger : public QObject
 {
@@ -16,30 +16,34 @@ public:
                        QString host = my_host ,QString port = my_port);
     TcpManger(const TcpManger &) = delete;
     TcpManger &operator=(const TcpManger &) = delete;
-    static TcpManger*getInstance();
+    ~TcpManger();
     void connect_to_server();
-    void write(const QString &data,ReqId reqid);
+    static TcpManger &getInstance();
 private:
     QString m_host;
     QString m_port;
     uint16_t reqid;
     long long len;
     QTcpSocket*tcpsock;
-    static TcpManger*tcp_manger;
     QMap<ReqId,Function>function_map;
     QByteArray _buffer;
     bool is_recv;
-    QThreadPool pool;
+    int per;
+    qint64 m_totalBytes;
+    qint64 m_sentBytes;
     void initfunction_map();
 signals:
     void sign_switch_main();
     void sign_refresh(QString data);
     void sign_create_file(QString data);
     void sign_down_file(QString data);
+    void sign_down_wait_bar(int per);
 public slots:
     void slot_connect_suss();
     void slot_disconnect();
     void read();
+    void write(const QString &data,ReqId reqid);
+    void slot_bytesWritten(qint64 bytes);
 };
 
 #endif // TCPMANGER_H

@@ -29,5 +29,6 @@ private:
     LoginDialog*log_dlg;
     RegisterDialog*regis_dlg;
     MainDialog*main_dlg;
+signals:
 };
 #endif // MAINWINDOW_H

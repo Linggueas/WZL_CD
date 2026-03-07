@@ -6,6 +6,9 @@
 #include <QTreeWidget>
 #include "waitdialog.h"
 #include "newnamedialog.h"
+#include "tcpmanger.h"
+#include "QThread"
+#include "readatathread.h"
 namespace Ui {
 class MainDialog;
 }
@@ -42,6 +45,9 @@ private:
     QString getItemFullPath(QTreeWidgetItem* item);
     void add_refresh_item(QJsonArray json_arr,QTreeWidgetItem* const &item);
     WaitDialog *wait_dlg;
+    readatathread *thread;
+signals:
+    void sign_write(const QString &data,ReqId reqid);
 };
 
 #endif // MAINDIALOG_H

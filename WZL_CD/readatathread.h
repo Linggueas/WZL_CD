@@ -2,7 +2,7 @@
 #define READATATHREAD_H
 
 #include <QObject>
-
+#include <QThread>
 class readatathread : public QThread
 {
     Q_OBJECT

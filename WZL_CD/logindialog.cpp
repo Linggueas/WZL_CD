@@ -51,13 +51,13 @@ void LoginDialog::slot_login_mod_finish(ReqId id, QString res, ErrorCodes err)
     {
         my_email = ui->email_lineEdit->text();
         qDebug()<<"success!!!";
-        TcpManger::getInstance()->connect_to_server();
+        TcpManger::getInstance().connect_to_server();
         QJsonObject json_obj;
         json_obj["email"] = my_email;
         QByteArray by_data = QJsonDocument(json_obj).toJson();
-        TcpManger::getInstance()->write
+        TcpManger::getInstance().write
             (QString(by_data),ReqId::ID_LOGIN_USER);
-        connect(TcpManger::getInstance(),&TcpManger::sign_switch_main,this,&LoginDialog::slot_switch_main);
+        connect(&TcpManger::getInstance(),&TcpManger::sign_switch_main,this,&LoginDialog::slot_switch_main);
     }
 }
 

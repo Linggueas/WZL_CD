@@ -65,8 +65,8 @@ void RegisterDialog::slot_reg_mod_finish(ReqId id, QString res, ErrorCodes err)
         json_obj["email"] = ui->email_ineEdit->text();
         json_obj["dirname"] = ui->email_ineEdit->text();
         QByteArray data = QJsonDocument(json_obj).toJson();
-        TcpManger::getInstance()->connect_to_server();
-        TcpManger::getInstance()->write(QString(data),ReqId::ID_CREATE_DIR);
+        TcpManger::getInstance().connect_to_server();
+        TcpManger::getInstance().write(QString(data),ReqId::ID_CREATE_DIR);
     }
 }
 //注册按钮

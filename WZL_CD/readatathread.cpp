@@ -7,5 +7,5 @@ readatathread::readatathread(QObject *parent)
 }
 void readatathread::run()
 {
-
+    exec();
 }

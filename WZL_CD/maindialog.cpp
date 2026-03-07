@@ -20,6 +20,9 @@ MainDialog::MainDialog(QWidget *parent)
     m_cur_item = nullptr;
     m_cur_dir = "";
     ui->setupUi(this);
+    thread = new readatathread(this);
+    TcpManger::getInstance().moveToThread(thread);
+    thread->start();
     add_menu = new QMenu(this);
     add_menu->addAction("创建文件夹");
     add_menu->addAction("添加文件");
@@ -27,19 +30,21 @@ MainDialog::MainDialog(QWidget *parent)
     ui->CD_Widget->setHeaderHidden(true);
     connect(ui->CD_Widget,&QTreeWidget::itemClicked,
             this,&MainDialog::onItemClicked);
-    QJsonObject json_obj;
-    json_obj["email"] = my_email;
-    QByteArray data = QJsonDocument(json_obj).toJson();
-    TcpManger::getInstance()->write(QString(data),ReqId::ID_REFRESH);
+    connect(this,&MainDialog::sign_write,&TcpManger::getInstance(),&TcpManger::write,Qt::QueuedConnection);
 }
 
 MainDialog::~MainDialog()
 {
+    thread->quit();
+    thread->wait();
     delete ui;
 }
 
 void MainDialog::on_create_dir_pushButton_clicked()
 {
+    disconnect(add_menu->actions().at(0), &QAction::triggered, this, nullptr);
+    disconnect(add_menu->actions().at(1), &QAction::triggered, this, nullptr);
+
     if(m_cur_dir == "")
     {
         QMessageBox::critical(this,"错误","请选择路径");
@@ -50,6 +55,7 @@ void MainDialog::on_create_dir_pushButton_clicked()
                  mapToGlobal(QPoint(0,ui->create_dir_pushButton->height()));
     connect(add_menu->actions().at(0),&QAction::triggered,this,[this](){
         CreateDirDialog *cd_dlg = new CreateDirDialog(this);
+        cd_dlg->setAttribute(Qt::WA_DeleteOnClose);
         cd_dlg->show();
         connect(cd_dlg,&CreateDirDialog::sign_dir_name,this,[this](const QString &dirname){
             QJsonObject json_obj;
@@ -65,11 +71,11 @@ void MainDialog::on_create_dir_pushButton_clicked()
             m_cur_item->addChild(item);
             ui->CD_Widget->setItemWidget(item,0,dir);
             QByteArray data = QJsonDocument(json_obj).toJson();
-            TcpManger::getInstance()->write(QString(data),ReqId::ID_CREATE_DIR);
+            emit sign_write(QString(data),ReqId::ID_CREATE_DIR);
         });
 
     });
-    //创建文件夹
+    //创建文件
     connect(add_menu->actions().at(1),&QAction::triggered,this,[this](){
         QWidget* widget = ui->CD_Widget->itemWidget(m_cur_item,0);
         QString class_name = widget->metaObject()->className();
@@ -85,7 +91,10 @@ void MainDialog::on_create_dir_pushButton_clicked()
             tr("所有文件 (*)")
             );
         QFile file(file_dir);
-        file.open(QIODevice::ReadOnly);
+        if(!file.open(QIODevice::ReadOnly))
+        {
+            return;
+        }
         QByteArray file_data = file.readAll();
         QStringList file_list = file_dir.split("/");
         QString file_name = file_list[file_list.size()-1];
@@ -102,17 +111,15 @@ void MainDialog::on_create_dir_pushButton_clicked()
         json_obj["file_data"] = QString::fromUtf8(base64Data);
         json_obj["dir"] = m_cur_dir;
         json_obj["file_name"] = file_name;
-        TcpManger::getInstance()->
-            write(QString(QJsonDocument(json_obj).toJson()),ReqId::ID_CREATE_FILE);
+        emit sign_write
+            (QString(QJsonDocument(json_obj).toJson()),ReqId::ID_CREATE_FILE);
         wait_dlg->show();
-        connect(TcpManger::getInstance(),&TcpManger::sign_create_file,[this](QString data){
+        wait_dlg->config();
+        connect(&TcpManger::getInstance(),&TcpManger::sign_create_file,this,[this](QString data){
             wait_dlg->hide();
-        });
+        },Qt::QueuedConnection);
     });
     add_menu->exec(pos);
-    disconnect(add_menu->actions().at(0), &QAction::triggered, this, nullptr);
-    disconnect(add_menu->actions().at(1), &QAction::triggered, this, nullptr);
-
 }
 
 //删除
@@ -138,7 +145,7 @@ void MainDialog::on_remove_dir_pushButton_clicked()
         QString type = widget->metaObject()->className();
         json_obj["type"] = type;
         QByteArray json_data = QJsonDocument(json_obj).toJson();
-        TcpManger::getInstance()->write(QString(json_data),ReqId::ID_REMOVE);
+        emit sign_write(QString(json_data),ReqId::ID_REMOVE);
         ionr->close();
     });
 }
@@ -225,9 +232,9 @@ void MainDialog::on_refresh_pushButton_clicked()
     QJsonObject json_obj;
     json_obj["email"] = my_email;
     QByteArray data = QJsonDocument(json_obj).toJson();
-    TcpManger::getInstance()->write(QString(data),ReqId::ID_REFRESH);
-    connect(TcpManger::getInstance(),&TcpManger::sign_refresh,this,
-            &MainDialog::slot_refresh);
+    emit sign_write(QString(data),ReqId::ID_REFRESH);
+    connect(&TcpManger::getInstance(),&TcpManger::sign_refresh,this,
+            &MainDialog::slot_refresh,Qt::QueuedConnection);
 }
 
 //接收刷新请求的结构
@@ -282,6 +289,12 @@ void MainDialog::add_refresh_item(QJsonArray json_arr,QTreeWidgetItem* const &it
 //下载文件
 void MainDialog::on_download_pushButton_clicked()
 {
+    if(m_cur_dir == "")
+    {
+        QMessageBox::critical(this,"错误！","请选择文件");
+    }
+    disconnect(&TcpManger::getInstance(),&TcpManger::sign_down_file,this,nullptr);
+
     QWidget* widget = ui->CD_Widget->itemWidget(m_cur_item,0);
     QString class_name = widget->metaObject()->className();
     if(class_name == "m_dir")
@@ -292,9 +305,10 @@ void MainDialog::on_download_pushButton_clicked()
     QJsonObject json_obj;
     json_obj["email"] = my_email;
     json_obj["dir"] = m_cur_dir;
-    TcpManger::getInstance()->write(QString(QJsonDocument(json_obj).toJson()),ReqId::ID_DOWN_FILE);
+    emit sign_write(QString(QJsonDocument(json_obj).toJson()),ReqId::ID_DOWN_FILE);
     wait_dlg->show();
-    connect(TcpManger::getInstance(),&TcpManger::sign_down_file,[this](QString data){
+    wait_dlg->config();
+    connect(&(TcpManger::getInstance()),&TcpManger::sign_down_file,this,[this](QString data){
         QJsonDocument json_doc = QJsonDocument::fromJson(data.toUtf8());
         QJsonObject json_obj0 = json_doc.object();
         auto file_name = json_obj0["file_name"].toString();
@@ -306,21 +320,21 @@ void MainDialog::on_download_pushButton_clicked()
         file.open(QIODevice::WriteOnly);
         file.write(fileData);
         wait_dlg->hide();
-    });
-    disconnect(TcpManger::getInstance(),&TcpManger::sign_down_file,this,nullptr);
-
+        //disconnect(conn);
+    },Qt::QueuedConnection);
 }
 
 //从命名
 void MainDialog::on_reset_pushButton_clicked()
 {
     NewNameDialog*nn_dlg = new NewNameDialog(this);
+    nn_dlg->setAttribute(Qt::WA_DeleteOnClose);
     nn_dlg->show();
-    connect(nn_dlg,&NewNameDialog::sign_new_name,[this,nn_dlg](QString new_name){
+    connect(nn_dlg,&NewNameDialog::sign_new_name,this,[this,nn_dlg](QString new_name){
         QJsonObject json_obj;
         json_obj["old_dir"] = m_cur_dir;
         json_obj["new_name"] = new_name;
-        TcpManger::getInstance()->write(QString(QJsonDocument(json_obj).toJson()),ReqId::ID_NEW_NAME);
+        emit sign_write(QString(QJsonDocument(json_obj).toJson()),ReqId::ID_NEW_NAME);
         nn_dlg->hide();
     });
 

@@ -20,6 +20,7 @@ private:
 signals:
     void sign_switch_register();
     void sign_switch_main();
+    void sign_write(const QString &data,ReqId reqid);
 private slots:
     void on_regis_Button_clicked();
     void on_login_Button_clicked();

@@ -1,6 +1,9 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 #include<QMap>
+#include<QTcpSocket>
+#include <QMutex>
+class readDataThread;
 enum ReqId
 {
     ID_GET_VARIFY_CODE = 1001,//获取验证码
@@ -12,7 +15,8 @@ enum ReqId
     ID_REFRESH = 1007 ,//循环
     ID_CREATE_FILE = 1008 ,//
     ID_DOWN_FILE = 1009, //下载文件
-    ID_NEW_NAME = 1010 //重命名
+    ID_NEW_NAME = 1010 ,//重命名
+    ID_UPLOAD = 1011    //返回
 };
 
 //错误代码
@@ -21,4 +25,10 @@ enum ErrorCodes {
     ERR_JSON = 1,//JSON解析失败
     ERR_NETWORK = 2,//网络错误
 };
+
+extern QMap<QString,QTcpSocket*>socket;
+extern QMap<QTcpSocket*,QByteArray> _buffer;
+extern QMap<QTcpSocket*,readDataThread*>_rd_thread;
+extern QMutex mutex;
+extern QMutex log_mutex;
 #endif // GLOBAL_H

@@ -9,7 +9,7 @@
 #include <readdatathread.h>
 
 
-typedef std::function<void(QTcpSocket*,const QString&)> Function;
+
 class TcpManger : public QObject
 {
     Q_OBJECT
@@ -18,17 +18,13 @@ public:
     ~TcpManger();
     QTcpServer*tcpserver;
 private:
-    QMap<QString,QTcpSocket*>socket;
     QMap<ReqId,Function>function_map;
     void initfunction_map();
     void write(const QString &data,ReqId reqid,QTcpSocket *tcpsock);
     QString traverseFolder(const QString &folderPath);
-    QMap<QTcpSocket*,QByteArray> _buffer;
-    QMap<QTcpSocket*,readDataThread*>_rd_thread;
     bool _b_recv_pending;
     quint16 _message_id;
     long long _message_len;
-
 
     static const int MAX_THREAD_COUNT = 3;
 

@@ -8,11 +8,8 @@ Logger::~Logger()
 }
 Logger* Logger::getinstance()
 {
-    if(_log == nullptr)
-    {
-        _log = new Logger();
-    }
-    return _log;
+    static Logger instance;  // C++11 线程安全
+    return &instance;
 }
 void Logger::write(const QString &_log_)
 {
